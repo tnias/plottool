@@ -26,7 +26,7 @@ for i in range(1, filelength):
   if currentChar == ";":
 #    print(len(buffer))
 #    print(len(splitfile[fcounter]))
-    if len(buffer) + len(splitfile[fcounter]) <= 1025:
+    if len(buffer) + len(splitfile[fcounter]) <= 10250:
       splitfile[fcounter] += buffer
       buffer = ""
     else:
@@ -34,14 +34,18 @@ for i in range(1, filelength):
       splitfile.append(buffer)
       buffer = ""
 
-try:
-  port = serial.Serial(sys.argv[2], 9200)
-except:
-  print("no propper port given or rights missing")
-  sys.exit(128)
+port = serial.Serial(
+    port='/dev/ttyUSB0',
+    baudrate=9600,
+    parity=serial.PARITY_ODD,
+    stopbits=serial.STOPBITS_ONE,
+    bytesize=serial.EIGHTBITS
+)
 
 for i in range(0,len(splitfile)):
   port.write(splitfile[i])
   raw_input("Press Enter to continue...")
+
+port.write("U F U @;")
 
 __author__ = 'doommaster'
