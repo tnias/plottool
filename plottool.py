@@ -24,8 +24,8 @@ for i in range(1, int(filelength)):
   currentChar = HPGLinput.read(1)
   buffer += currentChar
   if currentChar == ";":
-    print(len(buffer))
-    print(len(splitfile[fcounter]))
+#    print(len(buffer))
+#    print(len(splitfile[fcounter]))
     if len(buffer) + len(splitfile[fcounter]) <= 1025:
       splitfile[fcounter] += buffer
       buffer = ""
@@ -34,7 +34,6 @@ for i in range(1, int(filelength)):
       splitfile.append(buffer)
       buffer = ""
 
-print(splitfile)
 try:
   port = serial.Serial(sys.argv[2], 9200)
 except:
@@ -42,7 +41,7 @@ except:
   sys.exit(128)
 
 for i in range(0,len(splitfile)):
-  #port.write(splitfile[i])
+  port.write(splitfile[i])
   raw_input("Press Enter to continue...")
 
 __author__ = 'doommaster'
