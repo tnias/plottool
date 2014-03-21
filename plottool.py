@@ -16,7 +16,6 @@ filelength = os.stat(sys.argv[1]).st_size
 print(str(filelength) + " characters loaded")
 splitfile = []
 fcounter = 0
-ccounter = 0
 buffer = ""
 splitfile.append("")
 
