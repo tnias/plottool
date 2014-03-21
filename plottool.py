@@ -20,7 +20,7 @@ buffer = ""
 splitfile.append("")
 
 
-for i in range(1, int(filelength)):
+for i in range(1, filelength):
   currentChar = HPGLinput.read(1)
   buffer += currentChar
   if currentChar == ";":
