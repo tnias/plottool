@@ -4,15 +4,23 @@
 import sys
 import os
 import serial
+import argparse
 
+parser = argparse.ArgumentParser(description='Process all arguments')
+parser.add_argument("-p", "--port", metavar='PORT', type=str, help="Serial port (default: /dev/ttyUSB0)", default="/dev/ttyUSB0")
+parser.add_argument("file", type=str, help="the HPGL-file you want to plot")
+args = parser.parse_args()
+
+print("Unsing port: " + args.p)
 try:
-  print sys.argv[1]
-  HPGLinput = open(sys.argv[1],"rt")
+  HPGLinput = open(args.file,"rt")
 except:
   print("no/wrong/empty file given as Argumen!")
   sys.exit(128)
 
-filelength = os.stat(sys.argv[1]).st_size
+print("Plotting file: " + args.file)
+
+filelength = os.stat(args.file).st_size
 print(str(filelength) + " characters loaded")
 splitfile = []
 fcounter = 0
@@ -35,7 +43,7 @@ for i in range(1, filelength):
       buffer = ""
 
 port = serial.Serial(
-    port='/dev/ttyUSB0',
+    port=args.p,
     baudrate=9600,
     parity=serial.PARITY_ODD,
     stopbits=serial.STOPBITS_ONE,
