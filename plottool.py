@@ -11,7 +11,7 @@ parser.add_argument("-p", "--port", metavar='PORT', type=str, help="Serial port 
 parser.add_argument("file", type=str, help="the HPGL-file you want to plot")
 args = parser.parse_args()
 
-print("Unsing port: " + args.p)
+print("Unsing port: " + args.port)
 try:
   HPGLinput = open(args.file,"rt")
 except:
@@ -43,7 +43,7 @@ for i in range(1, filelength):
       buffer = ""
 
 port = serial.Serial(
-    port=args.p,
+    port=args.port,
     baudrate=9600,
     parity=serial.PARITY_ODD,
     stopbits=serial.STOPBITS_ONE,
