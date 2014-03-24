@@ -25,7 +25,7 @@ print("Unsing port: " + args.port)
 try:
   HPGLinput = open(args.file,"rt")
 except:
-  print("no/wrong/empty file given as Argumen!")
+  print("no/wrong/empty file given in argument.")
   sys.exit(128)
 
 print("Plotting file: " + args.file)
