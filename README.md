@@ -3,7 +3,8 @@ plottool
 
 This script is intended to be used with a serial connected plotter/cutter.
 
-It will split the file into blocks <=10kB to prevent the plotter from choking on data.
+It will split the file into blocks <=10kB to prevent the plotter from choking on data,
+as long as data is waiting, the tool will resume with the next part after user input.
 
 usage is simple:
 
