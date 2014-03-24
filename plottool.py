@@ -17,6 +17,10 @@ parser.add_argument("-p", "--port", metavar='PORT', type=str, help="Serial port 
 parser.add_argument("file", type=str, help="the HPGL-file you want to plot")
 args = parser.parse_args()
 
+if not os.path.exists(args.port):
+  print("The port " + args.port + " does not exists.")
+  sys.exit(1)
+
 print("Unsing port: " + args.port)
 try:
   HPGLinput = open(args.file,"rt")
