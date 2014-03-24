@@ -3,8 +3,14 @@
 
 import sys
 import os
-import serial
 import argparse
+try:
+  import serial
+except:
+  print("You need to install pyserial." \
+       "On Debian/Ubuntu try " \
+       "sudo apt-get install python-serial")
+  sys.exit(1)
 
 parser = argparse.ArgumentParser(description='Process all arguments')
 parser.add_argument("-p", "--port", metavar='PORT', type=str, help="Serial port (default: /dev/ttyUSB0)", default="/dev/ttyUSB0")
