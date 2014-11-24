@@ -18,10 +18,10 @@ parser.add_argument("file", type=str, help="the HPGL-file you want to plot")
 args = parser.parse_args()
 
 if not os.path.exists(args.port):
-  print("The port " + args.port + " does not exists.")
+  print("The port " + args.port + " does not exist.")
   sys.exit(1)
 
-print("Unsing port: " + args.port)
+print("Using port: " + args.port)
 try:
   HPGLinput = open(args.file,"rt")
 except:
