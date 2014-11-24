@@ -7,8 +7,8 @@ import argparse
 try:
   import serial
 except:
-  print("You need to install pyserial." \
-       "On Debian/Ubuntu try " \
+  print("You need to install pyserial. "
+       "On Debian/Ubuntu try "
        "sudo apt-get install python-serial")
   sys.exit(1)
 
@@ -23,7 +23,7 @@ if not os.path.exists(args.port):
 
 print("Using port: " + args.port)
 try:
-  HPGLinput = open(args.file,"rt")
+  HPGLinput = open(args.file, "rt")
 except:
   print("no/wrong/empty file given in argument.")
   sys.exit(128)
@@ -42,8 +42,6 @@ for i in range(1, filelength):
   currentChar = HPGLinput.read(1)
   buffer += currentChar
   if currentChar == ";":
-#    print(len(buffer))
-#    print(len(splitfile[fcounter]))
     if len(buffer) + len(splitfile[fcounter]) <= 10250:
       splitfile[fcounter] += buffer
       buffer = ""
@@ -60,7 +58,7 @@ port = serial.Serial(
     bytesize=serial.EIGHTBITS
 )
 
-for i in range(0,len(splitfile)):
+for i in range(0, len(splitfile)):
   port.write(splitfile[i])
   raw_input("Press Enter to continue...")
 
