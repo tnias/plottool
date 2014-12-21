@@ -24,37 +24,35 @@ parser.add_argument("file", type=str, help="the HPGL-file you want to plot")
 args = parser.parse_args()
 
 if not os.path.exists(args.port):
-  print("The port " + args.port + " does not exist.")
+  print("The port {} does not exist.".format(args.port))
   sys.exit(1)
 
-print("Using port: " + args.port)
+print("Using port: {}".format(args.port))
 try:
-  HPGLinput = open(args.file, "rt")
+  HPGLinput = open(args.file)
 except:
   print("no/wrong/empty file given in argument.")
   sys.exit(128)
 
 print("Plotting file: " + args.file)
 
-filelength = os.stat(args.file).st_size
-print(str(filelength) + " characters loaded")
+HPGLdata = HPGLinput.read()
+
+print("{} characters loaded".format(len(HPGLdata)))
+
 splitfile = []
-fcounter = 0
-buffer = ""
-splitfile.append("")
-
-
-for i in range(1, filelength):
-  currentChar = HPGLinput.read(1)
-  buffer += currentChar
-  if currentChar == ";":
-    if len(buffer) + len(splitfile[fcounter]) <= 10250:
-      splitfile[fcounter] += buffer
-      buffer = ""
-    else:
-      fcounter += 1
-      splitfile.append(buffer)
-      buffer = ""
+cursplit = ""
+for command in HPGLdata.split(";"):
+  # ignore empty
+  if not command:
+    continue
+  command += ";"
+  if len(cursplit + command) <= 10250:
+    cursplit += command
+  else:
+    splitfile.append(cursplit)
+    cursplit = command
+splitfile.append(cursplit)
 
 port = serial.Serial(
     port=args.port,
@@ -64,8 +62,9 @@ port = serial.Serial(
     bytesize=serial.EIGHTBITS
 )
 
-for i in range(0, len(splitfile)):
-  port.write(splitfile[i])
+for i, splitpart in enumerate(splitfile):
+  print("plotting part {} of {}".format(i + 1, len(splitfile)))
+  port.write(splitpart)
   input("Press Enter to continue...")
 
 port.write("U F U @;")
