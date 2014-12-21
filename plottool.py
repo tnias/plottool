@@ -12,6 +12,12 @@ except:
        "sudo apt-get install python-serial")
   sys.exit(1)
 
+# make input python2 and python3 compatible
+try:
+  input = raw_input
+except NameError:
+  pass
+
 parser = argparse.ArgumentParser(description='Process all arguments')
 parser.add_argument("-p", "--port", metavar='PORT', type=str, help="Serial port (default: /dev/ttyUSB0)", default="/dev/ttyUSB0")
 parser.add_argument("file", type=str, help="the HPGL-file you want to plot")
@@ -60,7 +66,7 @@ port = serial.Serial(
 
 for i in range(0, len(splitfile)):
   port.write(splitfile[i])
-  raw_input("Press Enter to continue...")
+  input("Press Enter to continue...")
 
 port.write("U F U @;")
 
