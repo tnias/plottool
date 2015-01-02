@@ -10,7 +10,7 @@ except:
   print("You need to install pyserial. "
        "On Debian/Ubuntu try "
        "sudo apt-get install python-serial")
-  sys.exit(1)
+  exit(1)
 
 # make input python2 and python3 compatible
 try:
@@ -25,7 +25,7 @@ args = parser.parse_args()
 
 if not os.path.exists(args.port):
   print("The port {} does not exist.".format(args.port))
-  sys.exit(1)
+  exit(1)
 
 print("Using port: {}".format(args.port))
 try:
@@ -40,33 +40,29 @@ HPGLdata = HPGLinput.read()
 
 print("{} characters loaded".format(len(HPGLdata)))
 
-splitfile = []
-cursplit = ""
-for command in HPGLdata.split(";"):
-  # ignore empty
-  if not command:
-    continue
-  command += ";"
-  if len(cursplit + command) <= 10250:
-    cursplit += command
-  else:
-    splitfile.append(cursplit)
-    cursplit = command
-splitfile.append(cursplit)
-
 port = serial.Serial(
     port=args.port,
     baudrate=9600,
-    parity=serial.PARITY_ODD,
+  parity=serial.PARITY_NONE,
     stopbits=serial.STOPBITS_ONE,
-    bytesize=serial.EIGHTBITS
+  bytesize=serial.EIGHTBITS,
+  rtscts=True,
+  dsrdtr=True
 )
 
-for i, splitpart in enumerate(splitfile):
-  print("plotting part {} of {}".format(i + 1, len(splitfile)))
-  port.write(splitpart)
-  input("Press Enter to continue...")
+splitted = HPGLdata.split(";")
+total = len(splitted)
+
+sys.stdout.write("starting...")
+for i, command in enumerate(splitted):
+  sys.stdout.write("\rsending... {percent:.1f}% done ({done}/{total})".format(percent=(i + 1) * 100.0 / total, done=i + 1, total=total))
+  sys.stdout.flush()
+  # ignore empty
+  if not command:
+    continue
+  port.write(command + ";")
 
 port.write("U F U @;")
+sys.stdout.write("\n")
 
 __author__ = 'doommaster'
