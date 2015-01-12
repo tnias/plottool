@@ -399,7 +399,7 @@ class HPGL:
 			self.routes = original + self.routes
 
 	def getHPGL(self):
-		hpgl = HPGL_INIT + ";"
+		hpgl = HPGL_INIT
 		for route in self.routes:
 			first = True
 			for x, y in route:

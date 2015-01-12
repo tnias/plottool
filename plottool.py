@@ -23,6 +23,8 @@ parser = argparse.ArgumentParser(description="Process all arguments ")
 parser.add_argument("-p", "--port", metavar="PORT", type=str, help="Serial port (default: /dev/ttyUSB0)", default="/dev/ttyUSB0")
 parser.add_argument("-m", "--magic", action="store_true", help="Enable auto-optimize")
 parser.add_argument("-w", "--width", metavar="WIDTH", type=int, help="Scale to width in mm")
+parser.add_argument("-v", "--preview", action="store_true", help="Show preview window before plotting")
+parser.add_argument("--mirror", action="store_true", help="Mirror on X-axis for inverted cuts (T-Shirts etc.)")
 parser.add_argument("--pen", action="store_true", help="Disable cut optimization for rotating knifes")
 parser.add_argument("file", type=str, help="the HPGL-file you want to plot")
 args = parser.parse_args()
@@ -43,18 +45,31 @@ except:
 blade_optimize = False
 optimize = False
 reroute = False
+rotate180 = False
+mirror = False
 margin = 5
+
+if args.mirror:
+	mirror = True
 
 if args.magic:
 	blade_optimize = True
 	reroute = True
 	optimize = True
+	rotate180 = True
 
 if args.width is not None:
 	HPGLinput.scaleToWidth(args.width)
 
 if args.pen:
 	blade_optimize = False
+
+if rotate180:
+	HPGLinput.mirrorX()
+	HPGLinput.mirrorY()
+
+if mirror:
+	HPGLinput.mirrorX()
 
 if optimize:
 	HPGLinput.optimize()
@@ -75,6 +90,13 @@ print(" -> Total area:     {area:.1f} cm^2".format(area=w / 10 * h / 10))
 movement = sum(HPGLinput.getLength())
 print(" -> Total movement: {:.1f} cm".format(movement / 10))
 
+if args.preview:
+	import hpglpreview
+	import wx
+	app = wx.App(False)	
+	dialog = hpglpreview.HPGLPreview(HPGLinput, dialog=True)
+	if not dialog.ShowModal():
+		exit(1)
 try:
 	cont = input("continue? (y/n) ")
 except KeyboardInterrupt:
