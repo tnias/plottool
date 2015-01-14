@@ -121,7 +121,7 @@ splitted = HPGLdata.split(";")
 total = len(splitted)
 
 sys.stdout.write("starting...")
-port.write(";IN;")
+port.write(";IN:;PA;")
 
 for i, command in enumerate(splitted):
 	sys.stdout.write("\rsending... {percent:.1f}% done ({done}/{total})".format(percent=(i + 1) * 100.0 / total, done=i + 1, total=total))
@@ -130,8 +130,7 @@ for i, command in enumerate(splitted):
 	if not command:
 		continue
 	port.write(command + ";")
-
-port.write("@;")
+port.write("PU0,0;SP0;SP0;")
 sys.stdout.write("\n")
 
 __author__ = "doommaster"

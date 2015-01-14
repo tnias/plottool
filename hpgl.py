@@ -5,8 +5,10 @@ import math
 
 HPGL_GOTO = "PU%s,%s;"
 HPGL_CUTTO = "PD%s,%s;"
-HPGL_INIT = "IN;"
+HPGL_CUTTO_STR = "PD%s;"
+HPGL_INIT = "IN:;"
 HPGL_SELECT_PEN = "SP%s;"
+HPGL_PEN_ABSOLUTE = "PA;"
 
 
 def mm2hpgl(value):
@@ -62,9 +64,17 @@ def hpgl_cutto(match):
 	return HPGL_CUTTO, (x, y)
 
 
+def hpgl_cutto2(match):
+	coords = map(int, match.groups()[0].split(","))
+	xy = zip(coords[0::2], coords[1::2])
+	return HPGL_CUTTO, xy
+
+
 def hpgl_init(match):
 	return HPGL_INIT, None
 
+def hpgl_pen_absolute(match):
+	return HPGL_PEN_ABSOLUTE, None
 
 def hpgl_select_pen(match):
 	pen = int(match.group(1))
@@ -117,8 +127,10 @@ def path_mean(path):
 HPGL_CMDS = {
 	re.compile(r"^PU(-?\d+),(-?\d+)$"): hpgl_goto,
 	re.compile(r"^PD(-?\d+),(-?\d+)$"): hpgl_cutto,
+	re.compile(r"^PD((-?\d+,-?\d+,)+(-?\d+),(-?\d+))$"): hpgl_cutto2,
+	re.compile(r"^PA$"): hpgl_pen_absolute,
 	re.compile(r"^PU$"): hpgl_pen_up,
-	re.compile(r"^IN$"): hpgl_init,
+	re.compile(r"^IN:?$"): hpgl_init,
 	re.compile(r"^SP(\d+)$"): hpgl_select_pen}
 
 
@@ -145,17 +157,21 @@ class HPGL:
 						pass
 					elif cmd == HPGL_SELECT_PEN:
 						pass
+					elif cmd == HPGL_PEN_ABSOLUTE:
+						pass
 					elif cmd == HPGL_GOTO:
 						if path:
 							if len(path) > 1:
 								routes.append(path)
 						path = [params, ]
 					elif cmd == HPGL_CUTTO:
-						if path[-1] != params:
-							path.append(params)
+						if isinstance(params, list):
+							path.extend(params)
+						else:
+							if path[-1] != params:
+								path.append(params)
 					else:
-						raise "what to do with " + cmd + "?"
-						return
+						raise Exception("what to do with \"" + cmd + "\" ?")
 
 					matched = True
 					break
@@ -195,6 +211,7 @@ class HPGL:
 			new_path = []
 			new_path.append(path[0])
 			for prev, cur, next in zip(path[:-2], path[1:-1], path[2:]):
+				print prev,cur,next
 				angle = vecAngle(prev, cur, next)
 				if angle < math.pi / 1.1:
 					d2 = vecDist(cur, next)
@@ -226,7 +243,8 @@ class HPGL:
 			path = new_path
 			new_path = []
 			new_path.append(path[0])
-			for prev, cur, next in zip(path[:-2], path[1:-1], path[2:]):
+			prev = new_path[0]
+			for cur, next in zip(path[1:-1], path[2:]):
 				if cur == prev:
 					continue
 				if cur == next:
@@ -235,7 +253,11 @@ class HPGL:
 				if angle == math.pi:
 					continue
 				new_path.append(cur)
-			new_path.append(path[-1])
+				prev = cur
+			if new_path[-1] != path[-1]:
+				new_path.append(path[-1])
+			if len(new_path) == 1:
+				return None
 			if new_path[0] == new_path[-1]:
 				angle = vecAngle(new_path[-2], new_path[0], new_path[1])
 				if angle == math.pi:
@@ -249,7 +271,7 @@ class HPGL:
 		self.routes = []
 		for path in paths:
 			if path[0] == last:
-				self.routes[-1][1].extend(path)
+				self.routes[-1].extend(path)
 			else:
 				self.routes.append(path)
 			last = path[-1]
@@ -284,7 +306,9 @@ class HPGL:
 	def operate(self, fn):
 		routes = []
 		for path in self.routes:
-			routes.append(fn(path))
+			result = fn(path)
+			if result:
+				routes.append(result)
 		self.routes = routes
 
 	def operateXY(self, fn):
@@ -400,8 +424,16 @@ class HPGL:
 
 	def getHPGL(self):
 		hpgl = HPGL_INIT
+		hpgl += HPGL_PEN_ABSOLUTE
 		for route in self.routes:
 			first = True
+			route = map(lambda a: tuple(map(lambda b: int(round(b, 0)), a)), route)
+			goto = route[0]
+			route = ",".join(map(lambda a: "%d,%d" % a, route[1:]))
+			hpgl += HPGL_GOTO % goto
+			hpgl += HPGL_CUTTO_STR % route
+			continue
+			exit()
 			for x, y in route:
 				x = int(round(x, 0))
 				y = int(round(y, 0))
@@ -411,6 +443,8 @@ class HPGL:
 				else:
 					hpgl += HPGL_CUTTO % (x, y)
 		hpgl += HPGL_GOTO % (0, 0)
+		hpgl += HPGL_SELECT_PEN % 0
+		hpgl += HPGL_SELECT_PEN % 0
 		return hpgl
 
 	def exportHPGL(self, filename):
@@ -438,7 +472,7 @@ class HPGL:
 				next_path = None
 				distance = None
 
-	def rerouteXY(self, rowsize=400, pathfn=path_center):
+	def rerouteXY(self, rowsize=600, pathfn=path_start_stop):
 		min_xy, max_xy = self.getBoundingBox()
 		x, y = max_xy
 		_, min_y = min_xy
@@ -462,9 +496,12 @@ if __name__ == "__main__":
 	parser = argparse.ArgumentParser("HPGL modification/optimization tool")
 	parser.add_argument("file", type=str, help="the HPGL-file to edit")
 	parser.add_argument("-p", "--preview", type=str, help="Generate SVG preview file", metavar="SVG")
+	parser.add_argument("-o", "--output", type=str, help="Output HPGL file", metavar="HPGL")
 	args = parser.parse_args()
 
 	hpgl = HPGL(args.file)
 
 	if args.preview is not None:
 		hpgl.exportSVG(args.preview)
+	if args.output is not None:
+		hpgl.exportHPGL(args.output)
